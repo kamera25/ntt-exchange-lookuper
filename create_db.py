@@ -1,40 +1,57 @@
-import urllib.request
-import pandas
-import xlrd
-import json
-import value
+import os
+import requests
 
-# Download exchanger data from ntt east.
-#local_filename, headers = urllib.request.urlretrieve('https://www.ntt-east.co.jp/info-st/info_dsl/area-tokyo.xls')
-#html = open(local_filename)
+class Create_DB:
 
-lat = 35.668764
-lon = 139.795263
-appidY = value.defineVariable()
+    prefecture = ["tokyo", "kanagawa", "chiba", "saitama", "ibaraki", "tochigi", "gunma", "yamanashi", "nagano", "niigata",\
+    "miyagi", "fukushima", "iwate", "aomori", "yamagata", "akita", "hokkaido"]
 
-xls = pandas.ExcelFile("ntt.xls", encoding="SHIFT-JIS")
-df = xls.parse(xls.sheet_names[0], header=1, skip_footer=9)
-df.columns = [ 'Prefecture', 'Address1', 'Address2', 'Address3', 'ExchangeBill', "Notes"]
+    def downloadData(self, path, url):
+        
+        print("Start download :" + url)
+        
+        # ファイルのダウンロード
+        r = requests.get(url)
+        data = r.content
+        
+        # ファイルの保存
+        f = open(path, 'wb')
+        f.write(data)
+        f.close()
+        
+        print("Finish download :" + url)
+        
 
-# Reverse Geocoder.
-url = 'http://reverse.search.olp.yahooapis.jp/OpenLocalPlatform/V1/reverseGeoCoder?lat=' + str(lat) +'&lon=' + str(lon) + '&output=json&appid=' + appidY
-geoReq = urllib.request.urlopen(url)
+    def downloadNTTEOData(self):
+        
+        tmpdir = "tmp"
+        if( os.path.exists(tmpdir) != True):
+            os.mkdir(tmpdir)
+        
+        # NTT交換局データの一括ダウンロードを行う
+        for pre in self.prefecture:
+            
+            # ヘッダーを読み込む
+            url = 'https://www.ntt-east.co.jp/info-st/info_dsl/area-' + pre + '.xls'
+            res = requests.head(url)
+            size = int(res.headers["content-length"])
+            
+            # データをダウンロードすべきかチェックする
+            xlsfile = tmpdir + "/" + pre + ".xls"
+            if( os.path.exists(xlsfile) == True):
+                if( os.path.getsize( xlsfile) != size):
+                    self.downloadData( xlsfile, url)
+                else:
+                    print("Not modified : " + url)
+            else:
+                self.downloadData(xlsfile,url)
+        
+            #url = 'https://www.ntt-east.co.jp/info-st/info_dsl/area-' + pre + '.xls'
+            #local_filename, headers = urllib.request.urlretrieve(url)
+            #html = open(local_filename)
+        
+        
+        
+cdb = Create_DB()
+cdb.downloadNTTEOData()
 
-decode_str = geoReq.read().decode('utf-8')
-json = json.loads(decode_str)
-
-# Extraction Address.
-address=5*[0]
-for i in range(0, 5):
-    address[i]=json["Feature"][0]["Property"]["AddressElement"][i]["Name"] 
-    
-    
-# Search exchanger office of ntt.
-
-exOffice = \
-df[ df['Prefecture'].str.contains(address[0])\
-& df['Address1'].str.contains(address[1]) \
-& df['Address2'].str.contains(address[2]) \
-& df['Address3'].str.contains(address[3])]
-
-print (exOffice['ExchangeBill'].values)
