@@ -1,28 +1,23 @@
-import urllib.request
+import geosystem
+import create_db 
 import pandas
-import xlrd
-import json
-import value
 
 lat = 35.668764
 lon = 139.795263
-appidY = value.defineVariable()
 
-xls = pandas.ExcelFile("ntt.xls", encoding="SHIFT-JIS")
-df = xls.parse(xls.sheet_names[0], header=1, skip_footer=9)
-df.columns = [ 'Prefecture', 'Address1', 'Address2', 'Address3', 'ExchangeBill', "Notes"]
 
-# Reverse Geocoder.
-url = 'http://reverse.search.olp.yahooapis.jp/OpenLocalPlatform/V1/reverseGeoCoder?lat=' + str(lat) +'&lon=' + str(lon) + '&output=json&appid=' + appidY
-geoReq = urllib.request.urlopen(url)
+cdb = create_db.Create_DB()
+geo = geosystem.GeoSystem()
 
-decode_str = geoReq.read().decode('utf-8')
-json = json.loads(decode_str)
+df = cdb.dbData()
+json = geo.reverseGeoCoder( lat, lon)
+
 
 # Extraction Address.
 address=5*[0]
 for i in range(0, 5):
     address[i]=json["Feature"][0]["Property"]["AddressElement"][i]["Name"] 
+    print(address[i])
     
     
 # Search exchanger office of ntt.
@@ -30,7 +25,6 @@ for i in range(0, 5):
 exOffice = \
 df[ df['Prefecture'].str.contains(address[0])\
 & df['Address1'].str.contains(address[1]) \
-& df['Address2'].str.contains(address[2]) \
-& df['Address3'].str.contains(address[3])]
+& df['Address2'].str.contains(address[2])]
 
 print (exOffice['ExchangeBill'].values)

@@ -1,10 +1,15 @@
 import os
 import requests
+import value
+import pandas
 
 class Create_DB:
 
-    prefecture = ["tokyo", "kanagawa", "chiba", "saitama", "ibaraki", "tochigi", "gunma", "yamanashi", "nagano", "niigata",\
-    "miyagi", "fukushima", "iwate", "aomori", "yamagata", "akita", "hokkaido"]
+    prefecture = ["tokyo", "kanagawa", "chiba", "saitama", "ibaraki", "tochigi", "gunma", "yamanashi",\
+    "nagano", "niigata", "miyagi", "fukushima", "iwate", "aomori", "yamagata", "akita", "hokkaido"]
+
+    df = pandas.DataFrame()
+    isLoad = False
 
     def downloadData(self, path, url):
         
@@ -46,12 +51,28 @@ class Create_DB:
             else:
                 self.downloadData(xlsfile,url)
         
-            #url = 'https://www.ntt-east.co.jp/info-st/info_dsl/area-' + pre + '.xls'
-            #local_filename, headers = urllib.request.urlretrieve(url)
-            #html = open(local_filename)
+        
+    def BuildDB( self):
+        
+        isLoad = True
         
         
-        
-cdb = Create_DB()
-cdb.downloadNTTEOData()
+        # 全てのデータを結合して読みます
+        for pre in self.prefecture:     
+            path = "./tmp/" + pre + ".xls"
+            
+            xls = pandas.ExcelFile( path, encoding="SHIFT-JIS")
+            loaddf = xls.parse( xls.sheet_names[0], header=1, skip_footer=9)
+            loaddf.columns = [ 'Prefecture', 'Address1', 'Address2', 'Address3', 'ExchangeBill', "Notes"]
 
+            self.df = pandas.concat([ self.df, loaddf])
+            
+        print( "Load data from xls, successful.")
+        
+        
+    def dbData( self):
+        
+        if( self.isLoad == False):
+            self.BuildDB()
+        return self.df
+        
