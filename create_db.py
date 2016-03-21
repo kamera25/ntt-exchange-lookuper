@@ -15,11 +15,11 @@ class Create_DB:
         
         print("Start download :" + url)
         
-        # ファイルのダウンロード
+        # Download file.
         r = requests.get(url)
         data = r.content
         
-        # ファイルの保存
+        # Save file.
         f = open(path, 'wb')
         f.write(data)
         f.close()
@@ -33,15 +33,15 @@ class Create_DB:
         if( os.path.exists(tmpdir) != True):
             os.mkdir(tmpdir)
         
-        # NTT交換局データの一括ダウンロードを行う
+        # Download all exchange office data.
         for pre in self.prefecture:
             
-            # ヘッダーを読み込む
+            # Read headder.
             url = 'https://www.ntt-east.co.jp/info-st/info_dsl/area-' + pre + '.xls'
             res = requests.head(url)
             size = int(res.headers["content-length"])
             
-            # データをダウンロードすべきかチェックする
+            # Check data, if is it needed donwload.
             xlsfile = tmpdir + "/" + pre + ".xls"
             if( os.path.exists(xlsfile) == True):
                 if( os.path.getsize( xlsfile) != size):
@@ -57,7 +57,7 @@ class Create_DB:
         isLoad = True
         
         
-        # 全てのデータを結合して読みます
+        # Join all data. 
         for pre in self.prefecture:     
             path = "./tmp/" + pre + ".xls"
             
