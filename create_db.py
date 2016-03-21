@@ -29,7 +29,7 @@ class Create_DB:
 
     def downloadNTTEOData(self):
         
-        tmpdir = "tmp"
+        tmpdir = "/tmp"
         if( os.path.exists(tmpdir) != True):
             os.mkdir(tmpdir)
         
@@ -59,7 +59,7 @@ class Create_DB:
         
         # Join all data. 
         for pre in self.prefecture:     
-            path = "./tmp/" + pre + ".xls"
+            path = "/tmp/" + pre + ".xls"
             
             xls = pandas.ExcelFile( path, encoding="SHIFT-JIS")
             loaddf = xls.parse( xls.sheet_names[0], header=1, skip_footer=9)
@@ -67,7 +67,7 @@ class Create_DB:
 
             self.df = pandas.concat([ self.df, loaddf])
             
-        print( "Load data from xls, successful.")
+        print( "Load data from xls, successful.<br>")
         
         
     def dbData( self):
